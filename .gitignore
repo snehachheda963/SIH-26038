@@ -1,0 +1,11 @@
+data/
+models/
+idrid_dataset/
+DRIVE*/
+aptos*/
+sample_images/*.jpg
+*.asv
+*.mat
+slprj/
+A.Segmentation/
+resources/

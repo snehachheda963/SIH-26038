@@ -1,0 +1,9 @@
+ImageName,Status,DR_Level,Confidence,Referable
+IDRiD_001.jpg,pass,4,0.7439638,1
+IDRiD_002.jpg,pass,4,0.8175167,1
+IDRiD_003.jpg,pass,4,0.5422587,1
+demo_grade0_IDRiD_029.jpg,pass,0,0.3837998,0
+demo_grade1_IDRiD_063.jpg,pass,0,0.99545,0
+demo_grade2_IDRiD_008.jpg,pass,2,0.4302773,1
+demo_grade3_IDRiD_006.jpg,pass,3,0.7389579,1
+demo_grade4_IDRiD_001.jpg,pass,4,0.7439638,1
