@@ -1,50 +1,98 @@
-# SIH26038 — Project Starter Kit (dataset-ready)
+# ChakshuAI — Explainable AI for Diabetic Retinopathy Screening
+**SIH 2026 | Problem Statement: SIH26038**  
+**Sponsored by MathWorks**
 
-## What's in this folder
+A complete MATLAB-based screening pipeline designed for rural India.  
+It grades diabetic retinopathy severity (0–4), detects clinically relevant lesions, generates Grad-CAM explanations, and produces a doctor-readable report — all from a single fundus image.
 
-| File | Purpose |
-|---|---|
-| `setupProjectFolders.m` | Run once — creates the exact folders the code expects |
-| `checkImageQuality.m` | Module 1 — image quality check + enhancement |
-| `segmentStructures.m` | Module 2 — vessel/lesion/optic disc segmentation |
-| `gradeDR.m` | Module 3 — DR severity classification (0-4) |
-| `explainResult.m` | Module 4 — Grad-CAM heatmap + report text |
-| `runPipeline.m` | Runs Modules 1-4 in order on a single image |
-| `loadTrainedModel.m` | Helper — loads the trained model from disk (used by gradeDR.m and explainResult.m) |
-| `trainDRModel.m` | Trains the classifier once your dataset is sorted into folders |
-| `testPipeline.m` | Runs the full pipeline on every image in `sample_images/` at once |
+---
 
-## Right now (before you have a dataset)
+## Pipeline Overview
 
-1. Put all these files in one project folder in MATLAB.
-2. Run `setupProjectFolders.m` once — it creates:
-   ```
-   data/train/0/   data/train/1/   data/train/2/   data/train/3/   data/train/4/
-   models/
-   sample_images/
-   ```
-3. Everything else already runs safely without any data — `gradeDR.m` and
-   `explainResult.m` automatically detect that no trained model exists yet
-   (via `loadTrainedModel.m`) and return placeholder results instead of crashing.
-4. You can keep coding/testing the TODOs inside `checkImageQuality.m` and
-   `segmentStructures.m` right now — they don't need the classifier to be trained.
+| Module | File | Responsibility |
+|--------|------|----------------|
+| 1. Quality Gate | `checkImageQuality.m` | Rejects blurry / poorly framed images; enhances borderline ones |
+| 2. Structure Segmentation | `segmentStructures.m` | Vessels, optic disc, microaneurysms, hemorrhages, exudates |
+| 3. DR Grading | `gradeDR.m` | 5-class severity (0–4) + confidence + referable flag |
+| 4. Explainability | `explainResult.m` | Grad-CAM heatmap + clinical-style report |
+| 5. Integration | `runPipeline.m` | End-to-end orchestration |
+| Frontend | `retinaScreeningApp.m` | Simple, responsive App Designer GUI |
 
-## The moment your dataset is ready
+**Referable DR** is defined as Grade ≥ 2 (Moderate, Severe, or Proliferative).
 
-1. Sort images by DR grade into `data/train/0` ... `data/train/4`
-   (0 = No DR, 1 = Mild, 2 = Moderate, 3 = Severe, 4 = Proliferative).
-   - APTOS2019 and IDRiD both come with a CSV telling you the grade per image —
-     write a tiny script to copy each image into the right numbered folder based
-     on that CSV (ask for this script when you're ready — it's a 10-line job).
-2. Drop 3-5 separate test images into `sample_images/` (images not used for training).
-3. Run `trainDRModel.m`. This trains a ResNet-18 on your data and saves the result
-   to `models/dr_model.mat`. Takes anywhere from a few minutes to a couple of hours
-   depending on dataset size and whether you have a GPU (MATLAB uses it automatically
-   if available).
-4. Run `testPipeline.m`. It automatically picks up the newly trained model
-   (no code changes needed anywhere), runs the full pipeline on every image in
-   `sample_images/`, shows the heatmaps, and saves a results table to
-   `pipeline_test_results.csv`.
+---
 
-That's the whole "upload data then run" flow — nothing else in the code needs to
-change when the dataset arrives.
+## Quick Start
+
+### 1. One-time setup
+```matlab
+setupProjectFolders   % creates data/train/0…4, models/, sample_images/
+2. Prepare training data
+Sort fundus images into the five grade folders:
+textdata/train/0/   → No DR
+data/train/1/   → Mild
+data/train/2/   → Moderate
+data/train/3/   → Severe
+data/train/4/   → Proliferative
+Helper scripts are included:
+
+sortIDRiDDataset.m
+sortAPTOSDataset.m
+
+3. Train the model
+matlabtrainDRModel
+
+Uses transfer learning (ResNet-18) when available, otherwise a custom CNN.
+Applies class weighting + referable-DR boost to hit the problem-statement targets (>90% sensitivity, >85% specificity).
+Saves models/dr_model.mat.
+
+4. Test the full pipeline
+matlab% Single image
+result = runPipeline('path/to/image.jpg');
+
+% Batch test on sample_images/
+testPipeline
+5. Launch the GUI
+matlabretinaScreeningApp
+
+Key Features
+
+Quality-first design — rejects unusable images with clear guidance for the operator.
+Adaptive lesion detection — thresholds are computed per-image (mean + k·std) so the system is robust across different cameras and lighting conditions.
+Explainable output — Grad-CAM heatmap + structured clinical report that counts lesions and states the referral recommendation.
+Referable vs Non-referable metric — the primary evaluation target matches the SIH problem statement.
+District rollout model — Simulink model (DistrictRolloutModel.slx) for planning screening campaigns.
+
+
+Project Structure
+text├── checkImageQuality.m
+├── segmentStructures.m
+├── gradeDR.m
+├── explainResult.m
+├── runPipeline.m
+├── retinaScreeningApp.m
+├── trainDRModel.m
+├── loadTrainedModel.m
+├── testPipeline.m
+├── setupProjectFolders.m
+├── sortIDRiDDataset.m / sortAPTOSDataset.m
+├── calibrateLesionThresholds.m / calibrateSharpness.m
+├── evalLesionDetection.m / evalVesselSegmentation.m
+├── createDistrictRolloutModel.m
+├── DistrictRolloutModel.slx
+├── SIH26038.prj
+└── README.md
+
+Requirements
+
+MATLAB R2023b or later (recommended)
+Image Processing Toolbox
+Deep Learning Toolbox
+(Optional) Pretrained Networks support package for ResNet-18 transfer learning
+(Optional) Statistics and Machine Learning Toolbox for ROC/AUC
+
+
+Evaluation Targets (SIH26038)
+
+MetricTargetSensitivity (Referable DR)> 90%Specificity (Referable DR)> 85%ExplainabilityGrad-CAM + lesion-level report
+
